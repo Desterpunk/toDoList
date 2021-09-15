@@ -1,4 +1,4 @@
-import React, { useContext, useReducer, useRef, useState, createContext } from 'react';
+import React, { useContext, useReducer, useEffect, useRef, useState, createContext } from 'react';
 
 const HOST_API = "http://localhost:8080/api";
 const initialState = {
@@ -12,6 +12,7 @@ const Form = () => {
   const { dispatch, state: { todo } } = useContext(Store);
   const item = todo.item;
   const [state, setState] = useState(item);
+  
   const onAdd = (event) => {
     event.preventDefault();
     const request = {
@@ -43,8 +44,44 @@ const Form = () => {
       onChange={(event) => {
         setState({ ...state, name: event.target.value })
       }}  ></input>
-    {!item.id && <button onClick={onAdd}>Crear</button>}
+    {!state.id && <button onClick={onAdd}>Crear</button>}
   </form>
+}
+
+const List = () => {
+  const { dispatch, state: { todo } } = useContext(Store);
+  const currentList = todo.list;
+
+  useEffect(() => {
+    fetch(HOST_API + "/todos")
+      .then(response => response.json())
+      .then((list) => {
+        dispatch({ type: "update-list", list })
+      })
+  }, [dispatch]);
+
+  const decorationDone = {
+    textDecoration: 'line-through'
+  };
+  return <div>
+    <table >
+      <thead>
+        <tr>
+          <td>ID</td>
+          <td>Tarea</td>
+          <td>¿Completado?</td>
+        </tr>
+      </thead>
+      <tbody>
+        {currentList.map((todo) => {
+          return <tr key={todo.id} style={todo.completed ? decorationDone : {}}>
+            <td>{todo.id}</td>
+            <td>{todo.name}</td>
+          </tr>
+        })}
+      </tbody>
+    </table>
+  </div>
 }
 
 function reducer(state, action) {
@@ -53,7 +90,11 @@ function reducer(state, action) {
       const todoUp = state.todo.list;
       todoUp.push(action.item);
       return { ...state, todo: {list: todoUp, item: {}} }
-    default:
+    case 'update-list':
+      const todoUpList = state.todo;
+      todoUpList.list = action.list;
+      return { ...state, todo: todoUpList }
+      default:
       return state;
   }
 }
@@ -71,6 +112,7 @@ function App() {
   return <StoreProvider>
     <h3>To-Do List</h3>
     <Form />
+    <List/>
   </StoreProvider>
 }
 
