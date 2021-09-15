@@ -35,6 +35,31 @@ const Form = () => {
       });
   }
 
+  const onEdit = (event) => {
+    event.preventDefault();
+
+    const request = {
+      name: state.name,
+      id: item.id,
+      isCompleted: item.isCompleted
+    };
+
+
+    fetch(HOST_API + "/todo", {
+      method: "PUT",
+      body: JSON.stringify(request),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+      .then(response => response.json())
+      .then((todo) => {
+        dispatch({ type: "update-item", item: todo });
+        setState({ name: "" });
+        formRef.current.reset();
+      });
+  }
+
   
 
   return <form ref={formRef}>
@@ -46,6 +71,7 @@ const Form = () => {
       onChange={(event) => {
         setState({ ...state, name: event.target.value })
       }}  ></input>
+    {item.id && <button onClick={onEdit}>Actualizar</button>}
     {!state.id && <button onClick={onAdd}>Crear</button>}
   </form>
 }
@@ -70,6 +96,9 @@ const List = () => {
     })
   };
 
+  const onEdit = (todo) => {
+    dispatch({ type: "edit-item", item: todo })
+  };
 
   const decorationDone = {
     textDecoration: 'line-through'
@@ -89,6 +118,7 @@ const List = () => {
             <td>{todo.id}</td>
             <td>{todo.name}</td>
             <td><button onClick={() => onDelete(todo.id)}>Eliminar</button></td>
+            <td><button onClick={() => onEdit(todo)}>Editar</button></td>
           </tr>
         })}
       </tbody>
@@ -102,10 +132,12 @@ function reducer(state, action) {
       const todoUp = state.todo.list;
       todoUp.push(action.item);
       return { ...state, todo: {list: todoUp, item: {}} }
+
     case 'update-list':
       const todoUpList = state.todo;
       todoUpList.list = action.list;
       return { ...state, todo: todoUpList }
+
     case 'delete-item':
       const todoUpDelete = state.todo;
       const listUpdate = todoUpDelete.list.filter((item) => {
@@ -113,6 +145,24 @@ function reducer(state, action) {
       });
       todoUpDelete.list = listUpdate;
       return { ...state, todo: todoUpDelete }
+
+    case 'edit-item':
+      const todoUpEdit = state.todo;
+      todoUpEdit.item = action.item;
+      return { ...state, todo: todoUpEdit } 
+
+    case 'update-item':
+      const todoUpItem = state.todo;
+      const listUpdateEdit = todoUpItem.list.map((item) => {
+        if (item.id === action.item.id) {
+          return action.item;
+        }
+        return item;
+      });
+      todoUpItem.list = listUpdateEdit;
+      todoUpItem.item = {};
+      return { ...state, todo: todoUpItem } 
+      
       default:
       return state;
   }
