@@ -35,6 +35,8 @@ const Form = () => {
       });
   }
 
+  
+
   return <form ref={formRef}>
     <input
       type="text"
@@ -60,6 +62,15 @@ const List = () => {
       })
   }, [dispatch]);
 
+  const onDelete = (id) => {
+    fetch(HOST_API + "/" + id + "/todo", {
+      method: "DELETE"
+    }).then((list) => {
+      dispatch({ type: "delete-item", id })
+    })
+  };
+
+
   const decorationDone = {
     textDecoration: 'line-through'
   };
@@ -77,6 +88,7 @@ const List = () => {
           return <tr key={todo.id} style={todo.completed ? decorationDone : {}}>
             <td>{todo.id}</td>
             <td>{todo.name}</td>
+            <td><button onClick={() => onDelete(todo.id)}>Eliminar</button></td>
           </tr>
         })}
       </tbody>
@@ -94,6 +106,13 @@ function reducer(state, action) {
       const todoUpList = state.todo;
       todoUpList.list = action.list;
       return { ...state, todo: todoUpList }
+    case 'delete-item':
+      const todoUpDelete = state.todo;
+      const listUpdate = todoUpDelete.list.filter((item) => {
+        return item.id !== action.id;
+      });
+      todoUpDelete.list = listUpdate;
+      return { ...state, todo: todoUpDelete }
       default:
       return state;
   }
