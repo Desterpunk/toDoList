@@ -9,11 +9,11 @@ import javax.persistence.Id;
 public class Todo {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private long id;
+    private Long id;
     private String name;
     private boolean isCompleted;
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
